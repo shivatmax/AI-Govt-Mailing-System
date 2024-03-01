@@ -93,7 +93,7 @@ The AI-Govt-Mailing-System is an AI-enabled web application designed to streamli
 
 Ensure you have the following dependencies installed on your system:
 
-* **Python**: `version x.y.z`
+* **Python**: `version 3.10`
 
 ### ⚙️ Installation
 
