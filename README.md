@@ -120,18 +120,9 @@ pip install -r requirements.txt
 Use the following command to run AI-Govt-Mailing-System:
 
 ```sh
-python main.py
-```
-
-### 🧪 Tests
-
-To execute tests, run:
-
-```sh
 streamlit run main.py
 ```
 
----
 
 
 ---
