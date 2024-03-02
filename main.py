@@ -1,3 +1,6 @@
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain.chains import LLMChain
+from langchain.prompts import PromptTemplate
 import streamlit as st
 from datetime import datetime
 
@@ -7,24 +10,21 @@ def render_sidebar():
     user_name = st.sidebar.text_input("Enter Your name:")
     state = st.sidebar.selectbox("Select State", ["Delhi", "Mumbai", "Kolkata", "Chennai"])
 
-    districts_delhi = ["Central Delhi", "North Delhi", "South Delhi", "East Delhi", "West Delhi"]
-    districts_mumbai = ["South Mumbai", "North Mumbai", "East Mumbai", "West Mumbai"]
-    districts_kolkata = ["North Kolkata", "South Kolkata", "East Kolkata", "West Kolkata"]
-    districts_chennai = ["North Chennai", "South Chennai", "East Chennai", "West Chennai"]
-
     if state == "Delhi":
-        districts = districts_delhi
+        districts = ["Central Delhi", "North Delhi", "South Delhi", "East Delhi", "West Delhi"]
     elif state == "Mumbai":
-        districts = districts_mumbai
+        districts = ["South Mumbai", "North Mumbai", "East Mumbai", "West Mumbai"]
     elif state == "Kolkata":
-        districts = districts_kolkata
+        districts = ["North Kolkata", "South Kolkata", "East Kolkata", "West Kolkata"]
     elif state == "Chennai":
-        districts = districts_chennai
+        districts = ["North Chennai", "South Chennai", "East Chennai", "West Chennai"]
     else:
         districts = []
 
     selected_district = st.sidebar.selectbox("Select District", districts)
 
+    complaint_level = "District"  # Default value to avoid reference before assignment
+    authorities = []
     if selected_district:
         complaint_level = st.sidebar.selectbox("Complaint Level", ["Central", "State", "District"])
         
@@ -35,45 +35,62 @@ def render_sidebar():
         else:  # Central
             authorities = ["Central Vigilance", "CBI"]
         
-        post_of_authority = st.sidebar.selectbox("Name of Authority", authorities)
+    post_of_authority = st.sidebar.selectbox("Name of Authority", authorities)
     
-    address = st.sidebar.text_area("Address")  
+    address = st.sidebar.text_area("Address")
     date_of_incident = st.sidebar.date_input("Date of Incident", datetime.now())
     description_of_incident = st.sidebar.text_area("Description of Incident")
     digital_signature_file = st.sidebar.file_uploader("Upload Digital Signature", type=["jpg", "png"])
     relevant_document_file = st.sidebar.file_uploader("Upload Relevant Document", type=["pdf", "docx", "jpg", "png"])
     submit_button = st.sidebar.button("SUBMIT")
-    return language, user_name, post_of_authority, state, address, date_of_incident, description_of_incident, digital_signature_file, relevant_document_file, submit_button
+    inputs = [language, user_name, post_of_authority, state, address, date_of_incident, description_of_incident, selected_district, complaint_level]
+    return submit_button, inputs
 
-def display_main_content(submit_button, inputs):
-    st.title("Letter Generation App")
-    ai_generated_letter_placeholder = st.empty()
-    ai_generated_letter = ai_generated_letter_placeholder.text_area("AI-Generated Letter", "Your AI-generated letter content will appear here...", height=300)
-    if st.button("SEND EMAIL", key="send_email"):
-        st.success("Email has been sent successfully! (Dummy functionality)")
-    if submit_button:
-        generated_content = generate_letter_content(*inputs[:-1]) 
-        ai_generated_letter_placeholder.text_area("AI-Generated Letter", generated_content, height=300)
-
-
-def generate_letter_content(language, user_name, post_of_authority, state, name_of_authority, address, date_of_incident, description_of_incident):
+def generate_letter_content(language, user_name, post_of_authority, state, address, date_of_incident, description_of_incident, selected_district, complaint_level):
+    Date = datetime.now().__format__("%d-%m-%Y")
     prompt_template = """
-    Write a formal {language} letter addressed to the {name_of_authority} at {post_of_authority} in {state}.
-    Name of Applicant: {user_name}. Your Address: {address}. Today Date: {today}.
-    The letter should inquire about or complain regarding an incident that occurred on {date_of_incident}. 
-    The incident is described as follows: {description_of_incident}. The letter should be polite, professional, and seek a prompt resolution or response. 
-    """
-    llm = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.5)
+Compose a formal letter in {language}, addressed to the {post_of_authority} at the {complaint_level} in {selected_district} {state}, India. 
+Ensure to follow the structured format and respectful tone customary in official correspondence within the Indian context.
+
+Applicant's Information:
+
+Name: {user_name}
+Address: {address}, {state}
+\n
+Date: {Date}
+\n
+Letter Content:
+
+Start with a respectful salutation to the {post_of_authority}, such as 'Respected Sir/Madam,'.
+Introduce yourself briefly in the opening paragraph, mentioning your name and address.
+Clearly state the purpose of your letter. If it's a complaint, mention that you wish to register a formal complaint. If it's an inquiry, specify what information you seek.
+Describe the incident: Provide a detailed account of the incident that occurred on {date_of_incident}, including what happened, where, and its impact on you or the community. 
+Be concise and factual in your description to {description_of_incident}.
+Request Action: Politely request a prompt investigation, resolution, or response to your inquiry or complaint. Specify any particular action you expect, such as corrective measures or the provision of information.
+Conclude the letter by thanking the official for their attention to the matter and express your hope for a swift response.
+Close with a respectful sign-off, such as 'Yours faithfully,' followed by your full name.
+Ensure the letter is polite, professional, and underscores the urgency of a prompt resolution or response. Attach any relevant documents or evidence that supports your complaint or inquiry.
+"""
+    llm = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.7)
     prompt = PromptTemplate.from_template(prompt_template)
     chain = LLMChain(llm = llm, prompt = prompt)
-    response = chain.run(language = language, user_name = user_name, post_of_authority = post_of_authority, state = state, date_of_incident = date_of_incident, description_of_incident = description_of_incident, today = datetime.now(), address = address)
-    return response
+    response = chain.run(language = language, user_name = user_name, post_of_authority = post_of_authority, state = state, date_of_incident = date_of_incident, description_of_incident = description_of_incident, Date = Date, address = address, selected_district = selected_district, complaint_level = complaint_level)
+    return response.replace("**", "")
+
+def display_main_content(submit, inputs):
+    st.title("Letter Generation App")
+    ai_generated_letter_placeholder = st.empty()
+    if submit:
+        generated_content = generate_letter_content(*inputs) 
+        ai_generated_letter_placeholder.text_area("AI-Generated Letter", generated_content, height=300)
+    else:
+        ai_generated_letter_placeholder.text_area("AI-Generated Letter", "Your AI-generated letter content will appear here...", height=300)
+    if st.button("SEND EMAIL", key="send_email"):
+        st.success("Email has been sent successfully! (Dummy functionality)")
 
 def main():
-    st.set_page_config(layout="wide")
-    inputs = render_sidebar()
-    submit_button = inputs[-1]
-    display_main_content(submit_button, inputs)
+    submit, inputs = render_sidebar()
+    display_main_content(submit, inputs[:])  # Exclude the last element which is not part of generate_letter_content inputs
 
 if __name__ == "__main__":
     main()
