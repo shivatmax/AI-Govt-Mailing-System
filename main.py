@@ -61,7 +61,7 @@ Conclude the letter by thanking the official for their attention to the matter a
 Close with a respectful sign-off, such as 'Yours faithfully,' followed by your full name. Also, include my email - {user_email} and contact number- {contact_number} for further communication.
 Ensure the letter is polite, professional, and underscores the urgency of a prompt resolution or response. Attach any relevant documents or evidence that supports your complaint or inquiry. 
 """
-    llm = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.7)
+    llm = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.7, google_api_key="AIzaSyDtjKJ2sVYCb-90ZQJs9n6RUYNnEHC5f7U")
     prompt = PromptTemplate.from_template(prompt_template)
     chain = LLMChain(llm=llm, prompt=prompt)
     response = chain.run(language=language, user_name=user_name, user_email=user_email, contact_number=contact_number, post_of_authority=post_of_authority, state=state, date_of_incident=date_of_incident, description_of_incident=description_of_incident, Date=Date, address=address, selected_district=selected_district, complaint_level=complaint_level)
@@ -81,7 +81,7 @@ def display_main_content(submit, inputs):
 
 def main():
     submit, inputs = render_sidebar()
-    display_main_content(submit, inputs[:])  # Adjust to match the correct number of inputs for generate_letter_content
+    display_main_content(submit, inputs[:])
 
 if __name__ == "__main__":
     main()
