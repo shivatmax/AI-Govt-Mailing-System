@@ -1,26 +1,49 @@
 import streamlit as st
 from datetime import datetime
-# import os
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.chains import LLMChain
-from langchain.prompts import PromptTemplate
-from dotenv import load_dotenv
-load_dotenv()
 
 def render_sidebar():
-    st.sidebar.title("Menu")
+    st.sidebar.title("Anti Corruption Reporting Portal")
     language = st.sidebar.radio("Choose a language for the letter:", ("Hindi", "English"))
-    user_name = st.sidebar.text_input("Name of User")
-    post_of_authority = st.sidebar.selectbox("Post of Authority", ["Option 1", "Option 2", "Option 3"])
-    state = st.sidebar.text_input("State (district/city/area)")
+    user_name = st.sidebar.text_input("Enter Your name:")
+    state = st.sidebar.selectbox("Select State", ["Delhi", "Mumbai", "Kolkata", "Chennai"])
+
+    districts_delhi = ["Central Delhi", "North Delhi", "South Delhi", "East Delhi", "West Delhi"]
+    districts_mumbai = ["South Mumbai", "North Mumbai", "East Mumbai", "West Mumbai"]
+    districts_kolkata = ["North Kolkata", "South Kolkata", "East Kolkata", "West Kolkata"]
+    districts_chennai = ["North Chennai", "South Chennai", "East Chennai", "West Chennai"]
+
+    if state == "Delhi":
+        districts = districts_delhi
+    elif state == "Mumbai":
+        districts = districts_mumbai
+    elif state == "Kolkata":
+        districts = districts_kolkata
+    elif state == "Chennai":
+        districts = districts_chennai
+    else:
+        districts = []
+
+    selected_district = st.sidebar.selectbox("Select District", districts)
+
+    if selected_district:
+        complaint_level = st.sidebar.selectbox("Complaint Level", ["Central", "State", "District"])
+        
+        if complaint_level == "District":
+            authorities = ["SDM", "DM"]
+        elif complaint_level == "State":
+            authorities = ["Anti Corruption Bureau", "Directorate of Vigilance", "SP"]
+        else:  # Central
+            authorities = ["Central Vigilance", "CBI"]
+        
+        post_of_authority = st.sidebar.selectbox("Name of Authority", authorities)
+    
     address = st.sidebar.text_area("Address")  
-    name_of_authority = st.sidebar.multiselect("Name of Authority", ["Authority 1", "Authority 2", "Authority 3"])
     date_of_incident = st.sidebar.date_input("Date of Incident", datetime.now())
     description_of_incident = st.sidebar.text_area("Description of Incident")
     digital_signature_file = st.sidebar.file_uploader("Upload Digital Signature", type=["jpg", "png"])
     relevant_document_file = st.sidebar.file_uploader("Upload Relevant Document", type=["pdf", "docx", "jpg", "png"])
     submit_button = st.sidebar.button("SUBMIT")
-    return language, user_name, post_of_authority, state, address, name_of_authority, date_of_incident, description_of_incident, digital_signature_file, relevant_document_file, submit_button
+    return language, user_name, post_of_authority, state, address, date_of_incident, description_of_incident, digital_signature_file, relevant_document_file, submit_button
 
 def display_main_content(submit_button, inputs):
     st.title("Letter Generation App")
@@ -43,7 +66,7 @@ def generate_letter_content(language, user_name, post_of_authority, state, name_
     llm = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0.5)
     prompt = PromptTemplate.from_template(prompt_template)
     chain = LLMChain(llm = llm, prompt = prompt)
-    response = chain.run(language = language, user_name = user_name, post_of_authority = post_of_authority, state = state, name_of_authority = name_of_authority, date_of_incident = date_of_incident, description_of_incident = description_of_incident, today = datetime.now(), address = address)
+    response = chain.run(language = language, user_name = user_name, post_of_authority = post_of_authority, state = state, date_of_incident = date_of_incident, description_of_incident = description_of_incident, today = datetime.now(), address = address)
     return response
 
 def main():
