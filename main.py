@@ -3,6 +3,8 @@ from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
 import streamlit as st
 from datetime import datetime
+import urllib.parse
+
 
 def render_sidebar():
     st.sidebar.title("Anti Corruption Reporting Portal")
@@ -70,14 +72,51 @@ Ensure the letter is polite, professional, and underscores the urgency of a prom
 def display_main_content(submit, inputs):
     st.title("Letter Generation App")
     ai_generated_letter_placeholder = st.empty()
+
     if submit:
         generated_content = generate_letter_content(*inputs)
         ai_generated_letter_placeholder.text_area("AI-Generated Letter", generated_content, height=300)
         st.success("Your letter has been generated and submitted successfully.")
+        subject_encoded = urllib.parse.quote("Anti Corruption Complaint")
+        body_encoded = urllib.parse.quote(generated_content)
+        # Define the email parameters
+        email_address = "atmaxsa@gmail.com"
+        # Store mailto_link in Streamlit's session state
+        st.session_state['mailto_link'] = f"mailto:{email_address}?subject={subject_encoded}&body={body_encoded}"
     else:
         ai_generated_letter_placeholder.text_area("AI-Generated Letter", "Your AI-generated letter content will appear here...", height=300)
-    if st.button("SEND EMAIL", key="send_email"):
-        st.success("Email has been sent successfully! (Dummy functionality)")
+    
+        # Check if mailto_link exists in session state before trying to use it
+    if 'mailto_link' in st.session_state:
+            html_link = f'''
+<a href="{st.session_state["mailto_link"]}" target="_blank" style="text-decoration: none;">
+    <button style="
+        padding: 10px 20px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        cursor: pointer;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        transition-duration: 0.4s;
+        border-radius: 8px;
+        -webkit-transition-duration: 0.4s; /* Safari */
+        transition-duration: 0.4s;
+        border: 2px solid #4CAF50;
+    ">
+        Send Email
+    </button>
+</a>
+'''
+
+            st.markdown(html_link, unsafe_allow_html=True)
+            st.balloons()
+    else:
+            st.error("Please generate a letter first before sending an email.")
+
 
 def main():
     submit, inputs = render_sidebar()
