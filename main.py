@@ -6,8 +6,6 @@ from datetime import datetime
 import urllib.parse
 
 
-
-
 def render_sidebar():
     st.sidebar.title("Anti Corruption Reporting Portal")
     language = st.sidebar.radio("Choose a language for the letter:", ("Hindi", "English"))
@@ -73,8 +71,6 @@ Ensure the letter is polite, professional, and underscores the urgency of a prom
 
 def display_main_content(submit, inputs):
     st.title("Letter Generation App")
-    image_url = "aimail.png"
-    st.image(image_url, width=250, )
     ai_generated_letter_placeholder = st.empty()
 
     if submit:
